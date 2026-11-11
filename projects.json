@@ -1,0 +1,84 @@
+[
+ {
+  "id": "mygia",
+  "name": "KĐT Mỹ Gia",
+  "kind": "kdt",
+  "aliases": [
+   "mỹ gia",
+   "my gia",
+   "mỹgia",
+   "kđt mỹ gia"
+  ],
+  "img": "plans/mygia.jpg",
+  "w": 1120,
+  "h": 1910,
+  "ctrl": [
+   [
+    0,
+    0,
+    12.2512756,
+    109.1623754
+   ],
+   [
+    1120,
+    0,
+    12.2511107,
+    109.1741945
+   ],
+   [
+    0,
+    1910,
+    12.2313949,
+    109.162297
+   ]
+  ],
+  "aligned": true,
+  "hints": "plans/mygia.json",
+  "note": "Sơ đồ canh theo toạ độ bản vẽ CAD (VN-2000)",
+  "vec": "plans/mygia.bin",
+  "vecMin": 0.7
+ },
+ {
+  "id": "phuochai",
+  "name": "KĐT VCN Phước Hải",
+  "kind": "kdt",
+  "aliases": [
+   "vcn",
+   "phước hải",
+   "phuoc hai",
+   "vcn phước hải"
+  ],
+  "img": "plans/phuochai.jpg",
+  "w": 2851,
+  "h": 3309,
+  "ctrl": [
+   [
+    0,
+    0,
+    12.2292966,
+    109.1772879
+   ],
+   [
+    2851,
+    0,
+    12.2292966,
+    109.1827121
+   ],
+   [
+    0,
+    3309,
+    12.2231034,
+    109.1772879
+   ]
+  ],
+  "aligned": false,
+  "vec": "plans/phuochai.bin",
+  "vecMin": 1.4
+ },
+ {
+  "id": "le",
+  "name": "Nhà phố & đất lẻ",
+  "kind": "le",
+  "aliases": []
+ }
+]
