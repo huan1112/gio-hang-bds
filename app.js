@@ -177,7 +177,7 @@ const pidOf=k=>k.split(':')[0];
 const codeOf=k=>{ const s=k.slice(k.indexOf(':')+1); const i=s.lastIndexOf('_'); return [s.slice(0,i),s.slice(i+1)]; };
 function hintOf(k){ const h=S.hints[pidOf(k)]; if(!h) return null; const c=k.slice(k.indexOf(':')+1); return h.lots[c]||null; }
 function posOf(k){ const r=S.listings[k]; if(r&&r.p) return r.p; const pin=S.pins[safeId(k)]; if(pin&&pin.p) return pin.p; const h=hintOf(k); return h?h.p:null; }
-function polyOf(k){ const r=S.listings[k]; if(r&&r.poly) return r.poly; const pin=S.pins[safeId(k)]; return pin&&pin.poly||null; }
+function polyOf(k){ const r=S.listings[k]; if(r&&r.poly) return r.poly; const pin=S.pins[safeId(k)]; if(pin) return pin.poly||null; const h=hintOf(k); return h&&h.poly||null; }
 function posSrc(k){ const r=S.listings[k]; if(r&&r.p) return 'tay'; if(S.pins[safeId(k)]) return 'tay'; return hintOf(k)?'cad':null; }
 function dirOf(k){ const r=S.listings[k]; return (r&&r.dir)||(hintOf(k)&&hintOf(k).d)||''; }
 function areaOf(k){ const r=S.listings[k]; if(r&&r.area) return {v:r.area,est:false}; const h=hintOf(k); return h&&h.a?{v:h.a,est:true}:null; }
@@ -205,7 +205,7 @@ function renderMap(){
     if(!p) continue;
     const st=stateOf(r), col=COL[st]; const poly=polyOf(k);
     const opt={renderer,color:'#fff',weight:2,fillColor:col,fillOpacity:ok?.95:.25,opacity:ok?1:.4,bubblingMouseEvents:false};
-    const lay=poly?L.polygon(poly,{...opt,weight:1.5}):L.circleMarker(p,{...opt,radius:z>=18?9:z>=16?7:5});
+    const lay=(poly&&z>=16.5)?L.polygon(poly,{...opt,color:col,weight:2.5,opacity:ok?1:.4,fillOpacity:ok?.42:.15}):L.circleMarker(p,{...opt,radius:z>=18?9:z>=16?7:5});
     lay.on('click',()=>openLot(k)); gList.addLayer(lay);
     if(z>=16.5) L.tooltip({permanent:true,direction:'top',offset:[0,-8],className:'lp '+(st==='ban'?'':st)+(ok?'':' dim'),interactive:false})
       .setLatLng(p).setContent(r.price!=null?fmt(r.price):'?').addTo(gLab); }
