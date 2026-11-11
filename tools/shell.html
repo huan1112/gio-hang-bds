@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f3f5f8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>{{TITLE}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="leaflet.css">
+<link rel="stylesheet" href="app.css?v={{V}}">
+</head>
+<body data-mode="{{MODE}}">
+<svg width="0" height="0" style="position:absolute">
+ <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></symbol>
+ <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></symbol>
+ <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-9.2-9A5 5 0 0 1 12 6a5 5 0 0 1 9.2 5C19 15.6 12 20 12 20z"/></symbol>
+ <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol>
+ <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M4 13h4l2 3h4l2-3h4M5 5h14l2 8v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z"/></symbol>
+ <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+ <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+ <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></symbol>
+ <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+ <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></symbol>
+ <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></symbol>
+ <symbol id="i-area" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M9 4v16"/></symbol>
+ <symbol id="i-width" viewBox="0 0 24 24"><path d="M3 12h18M6 9l-3 3 3 3M18 9l3 3-3 3"/></symbol>
+ <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></symbol>
+ <symbol id="i-pct" viewBox="0 0 24 24"><path d="M19 5 5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></symbol>
+ <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
+ <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></symbol>
+ <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4"/></symbol>
+ <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+ <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+</svg>
+<div id="app">
+<main>
+  <!-- HOME / GIỎ HÀNG -->
+  <section class="view on" id="v-home">
+    <div class="top">
+      <div class="avatar" id="meAv">BĐS</div>
+      <div class="who"><b id="hello">Giỏ hàng</b><small id="sub">Đang tải…</small></div>
+      <span id="conn">…</span>
+      <button class="icon-btn admin-only" id="bLogin" style="display:none" title="Đăng nhập">👤</button>
+    </div>
+    <div class="search">
+      <div class="box"><svg class="i"><use href="#i-search"/></svg><input id="hq" placeholder="Tìm lô: 15 B4, LK5-8 24…" enterkeyhint="search"></div>
+      <button class="icon-btn" id="hFilter"><svg class="i"><use href="#i-filter"/></svg></button>
+    </div>
+    <div class="chips" id="pjChips"></div>
+    <div class="chips" id="qChips" style="padding-top:4px"></div>
+    <div class="admin-only statrow" id="stats"></div>
+    <div class="sec"><h3>Mới cập nhật</h3><button data-sort="new">Xem tất cả</button></div>
+    <div class="hscroll" id="newest"></div>
+    <div class="sec"><h3 id="listTitle">Tất cả hàng</h3>
+      <select id="lsort" class="btn-lite" style="border:0;padding:7px 10px"><option value="new">Mới nhất</option><option value="asc">Giá thấp</option><option value="desc">Giá cao</option><option value="m2">Rẻ nhất /m²</option></select></div>
+    <div class="admin-only pad" style="padding-top:0;margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn sm pri" id="bAdd">＋ Thêm hàng</button><button class="btn sm" id="bCopyAll">Copy giỏ hàng</button><button class="btn sm" id="bUnpinned">Chưa ghim</button>
+    </div>
+    <div id="list"></div>
+  </section>
+
+  <!-- MAP -->
+  <section class="view" id="v-map">
+    <div id="map"></div>
+    <div class="mapbar">
+      <button class="icon-btn" id="mBack"><svg class="i"><use href="#i-back"/></svg></button>
+      <div class="box"><svg class="i"><use href="#i-search"/></svg><input id="q" placeholder="Tìm lô, tên đường…" enterkeyhint="search"></div>
+      <button class="icon-btn" id="bFilter"><svg class="i"><use href="#i-filter"/></svg></button>
+    </div>
+    <div class="panel" id="filterPanel">
+      <div class="row"><span class="meta">Giá (tỷ)</span><input class="t" id="fMin" type="number" step="0.1" inputmode="decimal" placeholder="từ" style="width:90px"><input class="t" id="fMax" type="number" step="0.1" inputmode="decimal" placeholder="đến" style="width:90px"></div>
+      <label class="f">Hướng</label><div class="row" id="fDirs"></div>
+      <label class="f">Trạng thái</label><div class="row" id="fStatus"></div>
+      <div class="row"><button class="chip" id="fRecent">Giá mới 24h</button><span style="margin-left:auto"></span><button class="btn sm" id="fClear">Xoá lọc</button><button class="btn sm pri" id="fClose">Xong</button></div>
+      <div class="meta" id="fCount"></div>
+    </div>
+    <div class="panel dark" id="modeBar"></div>
+    <div id="side">
+      <div id="layerSw"><button data-l="plain" class="on">Sơ đồ</button><button data-l="sat">Vệ tinh</button><button data-l="osm">Đường</button></div>
+      <button class="btn sm admin-only" id="bAlign" style="background:#fff;box-shadow:var(--sh)">📐 Canh</button>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div id="sheet"><div class="grab"></div><div class="sh" id="sheetBody"></div></div>
+  </section>
+
+  <!-- DETAIL -->
+  <section class="view" id="v-detail"></section>
+
+  <!-- SAVED (sale) -->
+  <section class="view" id="v-saved">
+    <div class="top"><div class="who"><b>Đã lưu</b><small>Lô bạn đánh dấu ♥ trên máy này</small></div></div>
+    <div id="savedList" style="margin-top:10px"></div>
+  </section>
+
+  <!-- IMPORT (admin) -->
+  <section class="view admin-only" id="v-import">
+    <div class="top"><div class="who"><b>Nhập tin Viber</b><small>Dán tin, hệ thống tự tách lô – giá – hoa hồng</small></div></div>
+    <div class="pad">
+      <div class="card">
+        <textarea class="t" id="raw" rows="7" placeholder="[10/11 15:25] Thông Đoàn: - 15 B4 giá 115tr/m&#10;- 54B4 giá 120tr/m  Nguồn CC, HH 2%"></textarea>
+        <div class="row"><select class="t" id="rawPj" style="flex:1"></select></div>
+        <div class="row"><input class="t" id="rawPoster" placeholder="Người đăng (nếu tin không có tên)" style="flex:1"><button class="btn pri" id="bParse">Tách tin</button></div>
+      </div>
+      <div id="preview"></div>
+    </div>
+  </section>
+
+  <!-- DEMANDS -->
+  <section class="view" id="v-demand">
+    <div class="top"><div class="who"><b>Khách cần mua</b><small>Tự ghép với hàng đang bán khớp tài chính &amp; hướng</small></div></div>
+    <div class="pad"><div id="demands"></div></div>
+  </section>
+
+  <!-- PROJECTS (admin) -->
+  <section class="view admin-only" id="v-proj">
+    <div class="top"><div class="who"><b>Dự án</b><small>Sơ đồ, vị trí, từ khoá nhận diện</small></div></div>
+    <div class="pad">
+      <button class="btn pri" id="bNewPj" style="margin-bottom:12px">＋ Thêm dự án / khu</button>
+      <div id="pjList"></div>
+    </div>
+  </section>
+</main>
+<nav class="nav" id="nav">
+  <button class="on" data-v="home" title="Giỏ hàng"><svg class="i"><use href="#i-home"/></svg></button>
+  <button data-v="map" title="Bản đồ"><svg class="i"><use href="#i-map"/></svg></button>
+  <button class="sale-only" data-v="saved" title="Đã lưu"><svg class="i"><use href="#i-heart"/></svg><span class="badge" id="nSaved" style="display:none"></span></button>
+  <button class="admin-only" data-v="import" title="Nhập Viber"><svg class="i"><use href="#i-inbox"/></svg></button>
+  <button data-v="demand" title="Khách cần"><svg class="i"><use href="#i-users"/></svg><span class="badge" id="nDem" style="display:none"></span></button>
+  <button class="admin-only" data-v="proj" title="Dự án"><svg class="i"><use href="#i-grid"/></svg></button>
+</nav>
+<div class="actbar" id="actbar"></div>
+</div>
+<select id="pjSel" style="display:none"></select><span id="nList" style="display:none"></span><input id="lq" style="display:none">
+<div class="modal" id="mEdit"><div class="box" id="mEditBox"></div></div>
+<div id="toast"></div>
+<script src="leaflet.js"></script>
+<script src="config.js"></script>
+<script src="app.js?v={{V}}"></script>
+</body>
+</html>

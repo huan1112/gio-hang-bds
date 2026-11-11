@@ -1,5 +1,9 @@
 # Giỏ hàng BĐS – bản đồ nhiều dự án
 
+- **Bản cho sale:** `index.html` → https://huan1112.github.io/gio-hang-bds/ (chỉ xem, lưu ♥, gửi khách)
+- **Bản admin:** `admin.html` → https://huan1112.github.io/gio-hang-bds/admin.html (nhập tin Viber, sửa giá, ghim lô, dự án)
+- Sửa giao diện: `tools/shell.html`, `tools/engine.js`, `tools/ui.js`, `app.css` rồi chạy `python3 tools/build_app.py`.
+
 - Mỗi dự án = 1 ảnh sơ đồ phân lô (JPG/PNG/PDF) phủ lên bản đồ, canh bằng 2–3 điểm.
 - Lô có hàng mới cần vị trí: Mỹ Gia tự định vị theo số lô trong bản vẽ CAD; khu khác ghim 1 chạm.
 - Nhà phố / đất lẻ: dán link Google Maps, toạ độ, hoặc toạ độ VN-2000 trên sổ (vẽ đúng ranh thửa).
