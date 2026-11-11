@@ -548,7 +548,7 @@ function openLot(k){
   x+=`<span>Hướng</span><span>${esc(dirOf(k)||'—')}${!(r&&r.dir)&&h&&h.d?' <span class="tag">theo bản vẽ</span>':''}${h&&h.c?' · <b>lô góc</b>':''}</span>`;
   if(r){ x+=`<span>Hoa hồng</span><span>${r.hh!=null?fmt(r.hh)+'%':'—'}</span><span>Nguồn</span><span>${esc(r.source||'—')}</span>`;
     x+=`<span>Người đăng</span><span>${esc(r.poster||'—')}${r.postedAt?' · '+esc(r.postedAt):''}</span><span>Cập nhật</span><span>${ago(r.updatedAt)}</span>`; }
-  x+=`<span>Vị trí</span><span>${p?(posSrc(k)==='cad'?'Tự động theo số lô trên bản vẽ':'Đã ghim tay'):'<b style="color:var(--bad)">Chưa ghim</b>'}</span></div>`;
+  x+=`<span>Vị trí</span><span>${p?(posSrc(k)==='cad'?(h&&h.q?'<b style="color:var(--bad)">Tự động – chưa chắc</b>, bấm Ghim lại nếu sai':'Tự động theo số lô trên bản vẽ'):'Đã ghim tay'):'<b style="color:var(--bad)">Chưa ghim</b>'}</span></div>`;
   if(r&&r.note) x+=`<div class="note">${esc(r.note)}</div>`;
   if(r&&r.history&&r.history.length){ x+=`<div class="hist"><b>Lịch sử giá</b>`;
     r.history.forEach((q,i)=>{ const pr=r.history[i+1]; let d='';
@@ -722,6 +722,21 @@ function fixBlock(pid,raw){
 function detectProject(t){ const s=strip(t); let best=null,len=0;
   for(const p of Object.values(S.projects)) for(const a of (p.aliases||[])){ const as=strip(a); if(as.length>len&&new RegExp('(^|[^a-z0-9])'+as.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'([^a-z0-9]|$)').test(s)){ best=p.id; len=as.length; } }
   return best; }
+function roadLot(t,pid){
+  const h=S.hints[pid]||{}; const al=h.aliases||{}; let m;
+  m=/(?:^|[^A-Za-z0-9])([ABV]\d{1,2})\s*-\s*(\d{1,3}[A-Za-z]?)(?!\d)/.exec(t); if(m) return {road:m[1].toUpperCase(),lot:m[2],m:m[0]};
+  m=/(?:^|[^A-Za-z0-9])(\d{1,3}A?)\s*([ABV]\d{1,2})(?!\d)/.exec(t); if(m) return {road:m[2].toUpperCase(),lot:m[1],m:m[0]};
+  m=/l[ôo]\s*(\d{1,3}[A-Za-z]?)\s*(?:đường|duong)\s*([ABV]\d{1,2})(?!\d)/i.exec(t); if(m) return {road:m[2].toUpperCase(),lot:m[1],m:m[0]};
+  m=/l[ôo]\s*(\d{1,3}[A-Za-z]?)\s*(?:đường|duong)\s+(\S+(?:\s+\S+)?)/i.exec(t);
+  if(m){ const name=strip(m[2]).toUpperCase(); for(const [k,v] of Object.entries(al)) if(name.startsWith(strip(k).toUpperCase())) return {road:v,lot:m[1],m:m[0]}; }
+  return null; }
+function splitLots(msg,pid){
+  const pj=S.projects[pid]||{}; if(!pj.roadLots) return [msg];
+  const lines=msg.text.split('\n'); const idx=lines.map((l,i)=>roadLot(l,pid)?i:-1).filter(i=>i>=0);
+  if(idx.length<2) return [msg];
+  const tail=lines.filter((l,i)=>!idx.includes(i)&&/(ngu[ồo]n|hh|hoa h[ồo]ng|chính chủ|\bcc\b)/i.test(l)).join(' ');
+  return idx.map((i,n)=>{ const end=n+1<idx.length?idx[n+1]:lines.length; const seg=lines.slice(i,end).join(' ');
+    return {...msg,text:seg+(/(hh|hoa h)/i.test(seg)?'':' '+tail)}; }); }
 function splitMessages(text){
   const lines=text.normalize('NFC').replace(/\r/g,'').split('\n'); const out=[]; let cur=null;
   const head=/^\s*\[?\s*((?:\d{1,2}[\/.-]\d{1,2}(?:[\/.-]\d{2,4})?[ ,]*)?\d{1,2}:\d{2}(?::\d{2})?(?:\s?[AaPp][Mm])?)\s*\]?\s*[-–]?\s*([^:\n]{2,40}?):\s*(.*)$/;
@@ -737,7 +752,7 @@ function parsePrice(t){
   if(v<20) return {price:v}; if(v<200) return {price:v/10,flag:`Giá viết tắt "${m[1]}" — đang hiểu là ${fmt(v/10)} tỷ, kiểm tra lại`};
   return {price:v/1000,flag:`Giá "${m[1]}" không có đơn vị — đang hiểu là ${fmt(v/1000)} tỷ`}; }
 function common(t,r){
-  const hm=/(?:\bhh|hoa\s*h[ồo]ng)\s*[:=]?\s*(\d+(?:[.,]\d+)?)\s*%/i.exec(t); if(hm) r.hh=num(hm[1]);
+  const hm=/(?:hh|hoa\s*h[ồo]ng)\s*[:=]?\s*(\d+(?:[.,]\d+)?)\s*%/i.exec(t); if(hm) r.hh=num(hm[1]);
   if(/\b(cc|ch[íi]nh\s*ch[ủu])\b/i.test(t)) r.source='Chính chủ';
   r.status=/(đ[ãa]\s*b[áa]n|\bbay\b|ra\s*h[àa]ng|\bsold\b)/i.test(t)?'daban':/(đ[ãa]\s*c[ọo]c|\bdc\b)/i.test(t)?'coc':'ban';
   const hd=/h[ưu][ớo]ng\s*(đông\s*nam|đông\s*bắc|tây\s*nam|tây\s*bắc|đông|tây|nam|bắc)/i.exec(t); if(hd) r.dir=cap(hd[1]);
@@ -754,10 +769,11 @@ function parseMsg(msg,defPid){
     const b=/(?:t\/c|tc|t[àa]i\s*ch[íi]nh|t[ầa]m|kho[ảa]ng|d[ưu][ớo]i)\s*:?\s*(\d+(?:[.,]\d+)?)\s*t[ỷỉy]/i.exec(t)||/(\d+(?:[.,]\d+)?)\s*t[ỷỉy]/i.exec(t); if(b) r.budget=num(b[1]);
     const hi=t.search(/h[ưu][ớo]ng/i); r.dirs=[]; if(hi>=0){ const seg=t.slice(hi+5,hi+60); let m; DIR_RE.lastIndex=0; while((m=DIR_RE.exec(seg))){ const d=cap(m[1]); if(!r.dirs.includes(d)) r.dirs.push(d);} }
     r.dpid=detectProject(t); r.text=t; return r; }
-  if(bm&&lm&&pj.kind!=='le'){ r.kind='lot'; const fb=fixBlock(r.pid,bm[1]+bm[2]+(bm[3]?'-'+bm[3]:'')); r.block=fb.block; r.lot=normLot(lm[1]);
+  let rl=null; if(pj.roadLots) rl=roadLot(t,r.pid);
+  if(rl || (bm&&lm&&pj.kind!=='le')){ r.kind='lot'; const fb=rl?{block:rl.road}:fixBlock(r.pid,bm[1]+bm[2]+(bm[3]?'-'+bm[3]:'')); r.block=fb.block; r.lot=normLot(rl?rl.lot:lm[1]);
     Object.assign(r,parsePrice(t)); common(t,r);
     if(fb.fixed) r.flag=[`Mã "${fb.fixed}" được hiểu là ${fb.block}`,r.flag].filter(Boolean).join(' · ');
-    r.note=t.replace(bm[0],'').replace(lm[0].replace(/^[^a-zà-ỹ]/i,''),'')
+    r.note=(rl?t.replace(rl.m,''):t.replace(bm[0],'').replace(lm[0].replace(/^[^a-zà-ỹ]/i,''),''))
       .replace(/gi[áa]\s*(?:b[áa]n|ch[àa]o)?\s*[:=]?\s*\d+(?:[.,]\d+)?\s*(?:t[ỷỉy]\s*\d{0,3}|tr(?:i[ệe]u)?(?:\s*\/\s*m2?)?)?/i,'')
       .replace(/(?:\bhh|hoa\s*h[ồo]ng)\s*[:=]?\s*\d+(?:[.,]\d+)?\s*%/i,'').replace(/(?:ngu[ồo]n\s*)?\b(?:cc|ch[íi]nh\s*ch[ủu])\b\.?/gi,'')
       .replace(/\s{2,}/g,' ').replace(/^[\s.,;:-]+|[\s.,;:-]+$/g,'');
@@ -774,7 +790,7 @@ function parseMsg(msg,defPid){
   r.kind='note'; r.text=t; return r; }
 let PV=[];
 function runParse(){ const msgs=splitMessages($('#raw').value), po=$('#rawPoster').value.trim(), def=$('#rawPj').value;
-  PV=msgs.map(m=>{ if(!m.poster&&po) m.poster=po; const r=parseMsg(m,def); r.use=r.kind!=='note'; return r; });
+  PV=msgs.flatMap(m=>{ if(!m.poster&&po) m.poster=po; const pid=detectProject(m.text)||def; return splitLots(m,pid).map(x=>{ const r=parseMsg(x,def); r.use=r.kind!=='note'; return r; }); });
   PV.forEach((r,i)=>{ if(r.kind!=='note') return; for(let j=i-1;j>=0;j--) if((PV[j].kind==='lot'||PV[j].kind==='le')&&(!r.poster||PV[j].poster===r.poster)){ r.attach=j; r.use=true; break; } });
   renderPreview(); }
 function pjOpts(sel){ return pjList().map(p=>`<option value="${esc(p.id)}" ${p.id===sel?'selected':''}>${esc(p.name)}</option>`).join(''); }
@@ -785,7 +801,7 @@ function renderPreview(){
     const by=`<div class="raw">${r.poster?'<b>'+esc(r.poster)+'</b>'+(r.postedAt?' · '+esc(r.postedAt):'')+': ':''}${esc(r.raw||r.text)}</div>`;
     if(r.kind==='lot'){ const k=lotKey(r.pid,r.block,r.lot), cur=S.listings[k], hh=hintOf(k); let ch='<span class="tag">Mới</span>';
       if(cur){ if(cur.price!==r.price&&cur.price!=null&&r.price!=null){ const d=r.price-cur.price; ch=`<span class="tag o">Giá ${fmt(cur.price)} → ${fmt(r.price)} ${d>0?'▲':'▼'}</span>`; } else ch='<span class="tag">Đã có, cùng giá</span>'; }
-      const pos=posOf(k)?(posSrc(k)==='cad'?'<span class="tag">tự định vị</span>':'<span class="tag">đã ghim</span>'):'<span class="tag o">chưa ghim vị trí</span>';
+      const pos=posOf(k)?(posSrc(k)==='cad'?(hh&&hh.q?'<span class="tag o">tự định vị – chưa chắc</span>':'<span class="tag">tự định vị</span>'):'<span class="tag">đã ghim</span>'):'<span class="tag o">chưa có vị trí – cần ghim</span>';
       h+=`<div class="card pv ${r.use?'':'skip'}">${sel}<b>${esc(r.block)} · Lô ${esc(r.lot)}</b></label> ${ch}${pos}${hh?`<span class="tag">${fmt(hh.a,1)} m² · ${esc(hh.d)}</span>`:''}
       <div class="g"><div><label class="f">Dự án</label><select data-i="${i}" data-k="pid">${pjOpts(r.pid)}</select></div>
         <div><label class="f">Mã dãy</label><input data-i="${i}" data-k="block" value="${esc(r.block)}"></div><div><label class="f">Lô</label><input data-i="${i}" data-k="lot" value="${esc(r.lot)}"></div>

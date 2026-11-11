@@ -75,7 +75,9 @@
   "note": "Toạ độ lấy từ bản vẽ CAD quy hoạch (VN-2000)",
   "vec": "plans/phuochai.bin",
   "vecMin": 0.45,
-  "img": "plans/phuochai.png"
+  "img": "plans/phuochai.png",
+  "hints": "plans/phuochai.json",
+  "roadLots": true
  },
  {
   "id": "le",
