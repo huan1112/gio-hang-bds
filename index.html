@@ -219,7 +219,7 @@ L.control.zoom({position:'topright'}).addTo(map);
 map.setView([12.238,109.172],15);
 map.createPane('planPane').classList.add('planPane'); map.createPane('vecPane').style.zIndex=260; map.getPane('vecPane').style.pointerEvents='none';
 const tiles={
-  sat:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:19,maxZoom:22,attribution:'Ảnh © Esri'}),
+  sat:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:17,maxZoom:22,attribution:'Ảnh © Esri'}),
   osm:L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxNativeZoom:19,maxZoom:22,attribution:'© OpenStreetMap'})};
 let tileFail=0; Object.values(tiles).forEach(t=>t.on('tileerror',()=>{ if(++tileFail===4) toast('Không tải được bản đồ nền ở đây — chạy bản GitHub để xem ảnh vệ tinh'); }));
 let baseName='plain';

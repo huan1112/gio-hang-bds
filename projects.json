@@ -56,26 +56,26 @@
    [
     0,
     0,
-    12.2418189,
-    109.173826
+    12.2423675,
+    109.1737975
    ],
    [
     2851,
     0,
-    12.2421781,
-    109.1799533
+    12.2428378,
+    109.1791069
    ],
    [
     0,
     3309,
-    12.2348689,
-    109.1742525
+    12.2347518,
+    109.1746724
    ]
   ],
   "aligned": true,
   "vec": "plans/phuochai.bin",
   "vecMin": 0.45,
-  "note": "Canh theo Vành đai 2, đường qua cầu và công viên tròn (sai số ~20 m)"
+  "note": "Canh theo đường phía bắc, Vành đai 2, đường phía nam và công viên tròn"
  },
  {
   "id": "le",
