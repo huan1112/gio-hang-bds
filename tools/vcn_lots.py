@@ -72,12 +72,13 @@ for l,p in lines:
         for a,b in zip(p,p[1:]):
             if math.dist(a,b)>0.8: segs.append(LineString([a,b]))
 tree=STRtree(segs)
+def angd0(a,b): return abs(((a-b)+90)%180-90)
 # fix label angles from nearest curb
 fx=[]
 for code,x,y,a in roads:
     pt=Point(x,y); idx=tree.query(pt.buffer(30)); sg=min((segs[i] for i in idx),key=lambda q:q.distance(pt)); (a0,b0)=sg.coords
     fx.append((code,x,y,math.degrees(math.atan2(b0[1]-a0[1],b0[0]-a0[0]))%180))
-roads=fx
+roads=[(c,x,y,(a if c[0]=='V' else (a if angd0(a,105 if c[0]=='A' else 15)<25 else (105 if c[0]=='A' else 15)))) for c,x,y,a in fx]
 print('label angles',[(r[0],round(r[3])) for r in roads])
 def road_at2(M,ang):
     best=None
@@ -127,28 +128,29 @@ for t in nums:
         w=min(far); M=(q.x+nx*w/2,q.y+ny*w/2); ang=math.degrees(math.atan2(b0[1]-a0[1],b0[0]-a0[0]))%180
         if NP.query_ball_point(M,6.5): continue
         m=match(M,ang)
-        if m: opts.append((d,m[0],m[1],nx,ny))
+        if m: opts.append((d,m[0],m[1],nx,ny,ang))
         if len(seen)>=4: break
     if not opts: why['nolabel']+=1; miss+=1; continue
-    d,sc,code,nx,ny=min(opts,key=lambda o:o[0])
+    d,sc,code,nx,ny,_a=min(opts,key=lambda o:o[0])
     info.append((t,P,opts,None,nx,ny)); res[len(info)-1]=code
-# neighbour voting along rows: lots numbered n±2 within 9 m should share the frontage road
+# row direction: lots numbered n±2 sit side by side along their frontage road
 def nval(x):
     m=re.match(r'0*(\d+)',x); return int(m.group(1)) if m else -99
-pts=np.array([i[1] for i in info]); kt=cKDTree(pts)
-for it in range(4):
-    ch=0
-    for k,(t,P,opts,_,nx,ny) in enumerate(info):
-        n=nval(t[1]); votes=collections.Counter()
-        for j in kt.query_ball_point(P,9.5):
-            if j==k: continue
-            m=nval(info[j][0][1])
-            if abs(m-n)==2 or (m==n and info[j][0][1]!=t[1]): votes[res[j]]+=1
-        if not votes: continue
-        top,c=votes.most_common(1)[0]
-        if top!=res[k] and c>=2 and any(o[2]==top for o in opts):
-            o=[o for o in opts if o[2]==top][0]; res[k]=top; info[k]=(t,P,opts,None,o[3],o[4]); ch+=1
-    print('vote pass',it,'changed',ch)
+pts=np.array([i[1] for i in info]); kt=cKDTree(pts); fixed=0
+for k,(t,P,opts,_,nx,ny) in enumerate(info):
+    n=nval(t[1]); dirs=[]
+    for j in kt.query_ball_point(P,10):
+        if j==k: continue
+        if abs(nval(info[j][0][1])-n) in (1,2):
+            v=pts[j]-np.array(P); dirs.append(math.degrees(math.atan2(v[1],v[0]))%180)
+    if not dirs: continue
+    rd=dirs[0]
+    good=[o for o in opts if angd(o[5],rd)<20]
+    if good:
+        o=min(good,key=lambda o:o[0])
+        if o[2]!=res[k]: fixed+=1
+        res[k]=o[2]; info[k]=(t,P,opts,None,o[3],o[4])
+print('row-direction fixes',fixed)
 for k,code in res.items():
     t,P,M,ang,nx,ny=info[k]
     no=t[1].strip().upper().lstrip('0') or '0'; key=code+'_'+no
@@ -156,7 +158,7 @@ for k,code in res.items():
     dd,ai=atree.query(P,k=4); a_=None
     for di,ii in zip(dd,ai):
         if di<4 and '.' in areas[ii][1]: a_=float(areas[ii][1]); break
-    rec={'p':ll(*P),'a':a_,'d':dr,'_xy':P}
+    rec={'p':ll(P[0]+0.0,P[1]),'a':a_,'d':dr,'_xy':P}
     if key in out:
         o=out[key]
         if math.dist(o['_xy'],P)<4:
