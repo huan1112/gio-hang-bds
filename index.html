@@ -246,7 +246,7 @@ function loadVec(url){
     for(let g=0;g<G;g++){ const a=Math.floor(bb[g*4]/C),b=Math.floor(bb[g*4+1]/C),c=Math.floor(bb[g*4+2]/C),d=Math.floor(bb[g*4+3]/C);
       if((c-a+1)*(d-b+1)>48){ big.push(g); continue; } for(let j=b;j<=d;j++) for(let i=a;i<=c;i++) cells[j*cw+i].push(g); }
     const tcells=Array.from({length:cw*ch},()=>[]); (H.texts||[]).forEach((t,i)=>{ const ci=Math.floor(t[0]/C),cj=Math.floor(t[1]/C); if(ci>=0&&cj>=0&&ci<cw&&cj<ch) tcells[cj*cw+ci].push(i); });
-    return {H,flags,xy,starts,gs,G,C,cw,ch,cells,big,tcells,stamp:new Uint32Array(G),tick:0};
+    return {H,flags,xy,starts,gs,G,C,cw,ch,cells,big,tcells,bb,stamp:new Uint32Array(G),tick:0};
   }); }
 const PlanLayer=L.Layer.extend({
   initialize(pj){ this.pj=pj; this.T=ctrlToT(pj.ctrl); this._op=.75; this._vecOn=false; },
@@ -289,18 +289,34 @@ const PlanLayer=L.Layer.extend({
     list.sort((a,b)=>a-b);
     ctx.setTransform(dpr*m[0],dpr*m[1],dpr*m[2],dpr*m[3],dpr*m[4],dpr*m[5]); ctx.lineJoin='round'; ctx.lineCap='round';
     const sat=baseName!=='plain', sc=H.scale;
+    const T=[];
     for(const g of list){ const st=H.styles[flags[gs[g]]&0x7f];
+      if(st.txt){ T.push(g); continue; }
       if(st.fill==='#ffffff'&&sat) continue;
       ctx.beginPath();
       for(let s=gs[g];s<gs[g+1];s++){ let k=starts[s]*2; const e=starts[s+1]*2; ctx.moveTo(xy[k]*sc,xy[k+1]*sc); for(k+=2;k<e;k+=2) ctx.lineTo(xy[k]*sc,xy[k+1]*sc); }
       if(st.fill){ ctx.fillStyle=sat&&st.fill==='#000000'?'#fff':st.fill; ctx.fill(st.eo?'evenodd':'nonzero'); }
       if(st.stroke){ ctx.strokeStyle=sat&&st.stroke==='#000000'?'#fff':st.stroke; ctx.lineWidth=Math.min(Math.max((st.w||0)*scale,.7),2.6)/scale; ctx.stroke(); } }
+    // glyph labels (numbers drawn as strokes): enlarge around their centre + halo
+    if(T.length){ const bb=d.bb; const draw=(pass)=>{ for(const g of T){
+        const x0=bb[g*4],y0=bb[g*4+1],x1=bb[g*4+2],y1=bb[g*4+3]; const h=Math.min(y1-y0,x1-x0>3*(y1-y0)?y1-y0:Math.max(y1-y0,x1-x0)); const hp=(y1-y0)*scale;
+        if(hp<2.2) continue; const k=Math.min(2.4,Math.max(1,11/hp)); const cx=(x0+x1)/2, cy=(y0+y1)/2;
+        ctx.save(); ctx.translate(cx,cy); ctx.scale(k,k); ctx.translate(-cx,-cy);
+        const ink=pass?(sat?'#fff':'#111'):(sat?'rgba(0,0,0,.8)':'rgba(255,255,255,.95)');
+        ctx.strokeStyle=ink; ctx.fillStyle=ink; ctx.lineWidth=(pass?1.0:3.6)/(scale*k);
+        const ps=new Path2D(), pf=new Path2D(); let hf=false;
+        for(let s=gs[g];s<gs[g+1];s++){ const isF=!!H.styles[flags[s]&0x7f].fill; const P=isF?pf:ps; if(isF) hf=true;
+          let q=starts[s]*2; const e=starts[s+1]*2; P.moveTo(xy[q]*sc,xy[q+1]*sc); for(q+=2;q<e;q+=2) P.lineTo(xy[q]*sc,xy[q+1]*sc); if(isF) P.closePath(); }
+        ctx.stroke(ps); if(hf){ if(pass) ctx.fill(pf); ctx.stroke(pf); } ctx.restore(); } };
+      draw(0); draw(1); }
     if(H.texts&&H.texts.length){ ctx.textAlign='center'; ctx.textBaseline='middle'; const seen=new Set();
       for(let j=Math.max(0,j0-1);j<=Math.min(ch-1,j1+1);j++) for(let i=Math.max(0,i0-1);i<=Math.min(cw-1,i1+1);i++) for(const ti of d.tcells[j*cw+i]){
-        const t=H.texts[ti]; const px=t[2]*scale; if(px<(t[5]===1?7:6)||px>70) continue;
-        ctx.save(); ctx.translate(t[0],t[1]); if(t[3]) ctx.rotate(t[3]*Math.PI/180);
-        ctx.font=`${t[5]===1?700:500} ${t[2]}px "Be Vietnam Pro",sans-serif`;
-        ctx.fillStyle=sat?'#fff':(t[5]===1?'#0f6b5c':t[5]===2?'#2d6a2a':'#5a4a63'); ctx.fillText(t[4],0,0); ctx.restore(); } }
+        const t=H.texts[ti]; const boost=t[5]===0?1.6:t[5]===3?1.25:1; let px=t[2]*scale*boost;
+        if(t[5]===0){ if(px<4.5) continue; if(px<11) px=11; } else if(px<(t[5]===1?8:9)) continue; if(px>(t[5]===1?40:22)) px=t[5]===1?40:22;
+        const fs=px/scale; ctx.save(); ctx.translate(t[0],t[1]); if(t[3]) ctx.rotate(t[3]*Math.PI/180);
+        ctx.font=`${t[5]===3?600:700} ${fs}px "Be Vietnam Pro",Arial,sans-serif`;
+        ctx.lineJoin='round'; ctx.lineWidth=3/scale; ctx.strokeStyle=sat?'rgba(0,0,0,.85)':'rgba(255,255,255,.95)'; ctx.strokeText(t[4],0,0);
+        ctx.fillStyle=sat?'#fff':(t[5]===1?'#0f6b5c':t[5]===2?'#2d6a2a':t[5]===3?'#6b4a2a':'#111'); ctx.fillText(t[4],0,0); ctx.restore(); } }
   }
 });
 const planLayers={};

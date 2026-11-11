@@ -49,7 +49,6 @@
    "vcn phước hải",
    "vcn ph"
   ],
-  "img": "plans/phuochai.png",
   "w": 2851,
   "h": 3309,
   "ctrl": [
@@ -73,9 +72,10 @@
    ]
   ],
   "aligned": true,
+  "note": "Toạ độ lấy từ bản vẽ CAD quy hoạch (VN-2000)",
   "vec": "plans/phuochai.bin",
   "vecMin": 0.45,
-  "note": "Toạ độ lấy từ bản vẽ CAD quy hoạch (VN-2000)"
+  "img": "plans/phuochai.png"
  },
  {
   "id": "le",
