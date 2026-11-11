@@ -46,7 +46,8 @@
    "vcn",
    "phước hải",
    "phuoc hai",
-   "vcn phước hải"
+   "vcn phước hải",
+   "vcn ph"
   ],
   "img": "plans/phuochai.jpg",
   "w": 2851,
@@ -55,25 +56,26 @@
    [
     0,
     0,
-    12.2292966,
-    109.1772879
+    12.2418189,
+    109.173826
    ],
    [
     2851,
     0,
-    12.2292966,
-    109.1827121
+    12.2421781,
+    109.1799533
    ],
    [
     0,
     3309,
-    12.2231034,
-    109.1772879
+    12.2348689,
+    109.1742525
    ]
   ],
-  "aligned": false,
+  "aligned": true,
   "vec": "plans/phuochai.bin",
-  "vecMin": 1.4
+  "vecMin": 1.4,
+  "note": "Canh theo Vành đai 2, đường qua cầu và công viên tròn (sai số ~20 m)"
  },
  {
   "id": "le",
