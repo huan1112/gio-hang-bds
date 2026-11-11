@@ -56,31 +56,62 @@
    [
     0,
     0,
-    12.2425674,
-    109.1738145
+    12.2424997,
+    109.1738901
    ],
    [
     2851,
     0,
-    12.2429736,
-    109.1791185
+    12.2424775,
+    109.1802882
    ],
    [
     0,
     3309,
-    12.2347472,
-    109.174672
+    12.235196,
+    109.1738641
    ]
   ],
   "aligned": true,
   "vec": "plans/phuochai.bin",
   "vecMin": 0.45,
-  "note": "Canh theo đường phía bắc, Vành đai 2, đường phía nam và công viên tròn"
+  "note": "Toạ độ lấy từ bản vẽ CAD quy hoạch (VN-2000)"
  },
  {
   "id": "le",
   "name": "Nhà phố & đất lẻ",
   "kind": "le",
   "aliases": []
+ },
+ {
+  "id": "lhp1",
+  "name": "Quy hoạch phía Đông sông Quán Trường",
+  "kind": "overlay",
+  "aliases": [],
+  "vec": "plans/lhp1.bin",
+  "vecMin": 0.035,
+  "w": 11000.0,
+  "h": 24750.0,
+  "ctrl": [
+   [
+    0,
+    0,
+    12.2518997,
+    109.1718742
+   ],
+   [
+    11000.0,
+    0,
+    12.251831,
+    109.192094
+   ],
+   [
+    0,
+    24750.0,
+    12.2071549,
+    109.1717191
+   ]
+  ],
+  "aligned": true
  }
 ]

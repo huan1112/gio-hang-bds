@@ -251,9 +251,9 @@ function loadVec(url){
 const PlanLayer=L.Layer.extend({
   initialize(pj){ this.pj=pj; this.T=ctrlToT(pj.ctrl); this._op=.75; this._vecOn=false; },
   onAdd(map){ const img=this._img=L.DomUtil.create('img','plan-img leaflet-zoom-animated'); img.decoding='async';
-    img.style.width=this.pj.w+'px'; img.style.height=this.pj.h+'px'; img.src=this.pj.img; img.onerror=()=>toast('Không tải được ảnh sơ đồ '+this.pj.name);
+    img.style.width=this.pj.w+'px'; img.style.height=this.pj.h+'px'; if(this.pj.img) img.src=this.pj.img; else img.style.display='none'; img.onerror=()=>toast('Không tải được ảnh sơ đồ '+this.pj.name);
     map.getPane('planPane').appendChild(img);
-    if(this.pj.vec){ this._cv=L.DomUtil.create('canvas','vec-cv'); map.getPane('vecPane').appendChild(this._cv);
+    if(this.pj.vec){ this._cv=L.DomUtil.create('canvas','vec-cv'); const vp=map.getPane('vecPane'); if(this.pj.kind==='overlay') vp.insertBefore(this._cv,vp.firstChild); else vp.appendChild(this._cv);
       loadVec(this.pj.vec).then(d=>{ this._vd=d; this._draw(); }).catch(e=>console.warn('vec',e)); }
     map.on('zoomanim',this._anim,this); map.on('viewreset zoomend moveend',this._reset,this); this._reset(); },
   onRemove(map){ L.DomUtil.remove(this._img); if(this._cv) L.DomUtil.remove(this._cv); map.off('zoomanim',this._anim,this); map.off('viewreset zoomend moveend',this._reset,this); },
@@ -306,7 +306,7 @@ const PlanLayer=L.Layer.extend({
 const planLayers={};
 function syncPlans(){ // add plan images when in view (lazy)
   const b=map.getBounds().pad(.3);
-  for(const pj of Object.values(S.projects)){ if(!pj.img||!pj.ctrl) continue;
+  for(const pj of Object.values(S.projects)){ if(!(pj.img||pj.vec)||!pj.ctrl) continue;
     let l=planLayers[pj.id];
     if(!l){ l=planLayers[pj.id]=new PlanLayer(pj); }
     const vis=b.intersects(l.bounds())&&map.getZoom()>=13;
@@ -353,7 +353,7 @@ function renderMap(){
     lay.on('click',()=>openLot(k)); gList.addLayer(lay);
     if(z>=16.5) L.tooltip({permanent:true,direction:'top',offset:[0,-8],className:'lp '+(st==='ban'?'':st)+(ok?'':' dim'),interactive:false})
       .setLatLng(p).setContent(r.price!=null?fmt(r.price):'?').addTo(gLab); }
-  if(z<15) for(const pj of Object.values(S.projects)){ const l=planLayers[pj.id]; if(!l) continue;
+  if(z<15) for(const pj of Object.values(S.projects)){ const l=planLayers[pj.id]; if(!l||pj.kind==='overlay') continue;
     L.marker(l.bounds().getCenter(),{icon:L.divIcon({className:'',html:`<div class="pj" style="transform:translate(-50%,-50%);display:inline-block;white-space:nowrap">${esc(pj.name)} · ${per[pj.id]||0}</div>`})})
       .on('click',()=>selectProject(pj.id)).addTo(gPj); }
   $('#bFilter').classList.toggle('on',filterOn());
@@ -375,8 +375,8 @@ function applyPjDocs(){
     S.projects[id]={...(S.projects[id]||{}),...d,id}; const l=planLayers[id];
     if(l){ if(l.pj.img!==S.projects[id].img){ if(map.hasLayer(l)) map.removeLayer(l); delete planLayers[id]; } else { l.pj=S.projects[id]; if(d.ctrl&&!ALIGN) l.setT(ctrlToT(d.ctrl)); } } }
   syncPlans(); }
-function allBounds(){ const b=L.latLngBounds([]); for(const pj of Object.values(S.projects)) if(pj.ctrl) b.extend(new PlanLayer(pj).bounds()); return b.isValid()?b:null; }
-function pjList(){ return Object.values(S.projects).sort((a,b)=>(a.kind==='le')-(b.kind==='le')||a.name.localeCompare(b.name,'vi')); }
+function allBounds(){ const b=L.latLngBounds([]); for(const pj of Object.values(S.projects)) if(pj.ctrl&&pj.kind!=='overlay') b.extend(new PlanLayer(pj).bounds()); return b.isValid()?b:null; }
+function pjList(){ return Object.values(S.projects).filter(p=>p.kind!=='overlay').sort((a,b)=>(a.kind==='le')-(b.kind==='le')||a.name.localeCompare(b.name,'vi')); }
 function renderPjSelects(){
   const opts=pjList();
   $('#pjSel').innerHTML=`<option value="all">Tất cả dự án</option>`+opts.map(p=>`<option value="${esc(p.id)}" ${S.cur===p.id?'selected':''}>${esc(p.name)}</option>`).join('');
