@@ -9,7 +9,7 @@
    "mỹgia",
    "kđt mỹ gia"
   ],
-  "img": "plans/mygia.jpg",
+  "img": "plans/mygia.png",
   "w": 1120,
   "h": 1910,
   "ctrl": [
@@ -36,7 +36,7 @@
   "hints": "plans/mygia.json",
   "note": "Sơ đồ canh theo toạ độ bản vẽ CAD (VN-2000)",
   "vec": "plans/mygia.bin",
-  "vecMin": 0.7
+  "vecMin": 0.5
  },
  {
   "id": "phuochai",
@@ -49,7 +49,7 @@
    "vcn phước hải",
    "vcn ph"
   ],
-  "img": "plans/phuochai.jpg",
+  "img": "plans/phuochai.png",
   "w": 2851,
   "h": 3309,
   "ctrl": [
@@ -74,7 +74,7 @@
   ],
   "aligned": true,
   "vec": "plans/phuochai.bin",
-  "vecMin": 1.4,
+  "vecMin": 0.45,
   "note": "Canh theo Vành đai 2, đường qua cầu và công viên tròn (sai số ~20 m)"
  },
  {
