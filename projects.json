@@ -36,7 +36,8 @@
   "hints": "plans/mygia.json",
   "note": "Sơ đồ canh theo toạ độ bản vẽ CAD (VN-2000)",
   "vec": "plans/mygia.bin",
-  "vecMin": 0.5
+  "vecMin": 0.5,
+  "blocks": "plans/mygia_blocks.json"
  },
  {
   "id": "phuochai",
@@ -77,7 +78,8 @@
   "vecMin": 0.45,
   "img": "plans/phuochai.png",
   "hints": "plans/phuochai.json",
-  "roadLots": true
+  "roadLots": true,
+  "blocks": "plans/phuochai_blocks.json"
  },
  {
   "id": "le",

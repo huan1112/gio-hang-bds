@@ -4,7 +4,7 @@ const ADMIN=document.body.dataset.mode==="admin";
 const CFG=window.MYGIA_CONFIG||{};
 const DIRS=['Bắc','Đông Bắc','Đông','Đông Nam','Nam','Tây Nam','Tây','Tây Bắc'];
 const STATUS={ban:'Đang bán',coc:'Đã cọc',daban:'Đã bán'};
-const COL={ban:'#1f9d55',new:'#f08c00',coc:'#7c5cd6',daban:'#8d9491'};
+const COL={ban:'#10b981',new:'#f97316',coc:'#8b5cf6',daban:'#64748b'};
 const DAY=864e5;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -61,7 +61,7 @@ const tiles={
   sat:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:17,maxZoom:22,attribution:'Ảnh © Esri'}),
   osm:L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxNativeZoom:19,maxZoom:22,attribution:'© OpenStreetMap'})};
 let tileFail=0; Object.values(tiles).forEach(t=>t.on('tileerror',()=>{ if(++tileFail===4) toast('Không tải được bản đồ nền ở đây — chạy bản GitHub để xem ảnh vệ tinh'); }));
-let baseName='plain';
+let baseName='block';
 function setBase(n){ baseName=n; Object.values(tiles).forEach(t=>map.removeLayer(t)); if(tiles[n]) tiles[n].addTo(map);
   document.querySelectorAll('#layerSw button').forEach(b=>b.classList.toggle('on',b.dataset.l===n));
   for(const l of Object.values(planLayers)){ l._applyOp(); l._draw&&l._map&&l._draw(); } }
@@ -165,7 +165,7 @@ function syncPlans(){ // add plan images when in view (lazy)
   for(const pj of Object.values(S.projects)){ if(!(pj.img||pj.vec)||!pj.ctrl) continue;
     let l=planLayers[pj.id];
     if(!l){ l=planLayers[pj.id]=new PlanLayer(pj); }
-    const vis=b.intersects(l.bounds())&&map.getZoom()>=13;
+    const vis=b.intersects(l.bounds())&&map.getZoom()>=13&&!(baseName==='block'&&pj.blocks);
     if(vis&&!map.hasLayer(l)) l.addTo(map); else if(!vis&&map.hasLayer(l)) map.removeLayer(l); } }
 map.on('moveend',syncPlans);
 
@@ -177,7 +177,7 @@ const pidOf=k=>k.split(':')[0];
 const codeOf=k=>{ const s=k.slice(k.indexOf(':')+1); const i=s.lastIndexOf('_'); return [s.slice(0,i),s.slice(i+1)]; };
 function hintOf(k){ const h=S.hints[pidOf(k)]; if(!h) return null; const c=k.slice(k.indexOf(':')+1); return h.lots[c]||null; }
 function posOf(k){ const r=S.listings[k]; if(r&&r.p) return r.p; const pin=S.pins[safeId(k)]; if(pin&&pin.p) return pin.p; const h=hintOf(k); return h?h.p:null; }
-function polyOf(k){ const r=S.listings[k]; if(r&&r.poly) return r.poly; const pin=S.pins[safeId(k)]; if(pin) return pin.poly||null; const h=hintOf(k); return h&&h.poly||null; }
+function polyOf(k){ const r=S.listings[k]; if(r&&r.poly) return r.poly; const pin=S.pins[safeId(k)]; if(pin) return pin.poly||null; return (typeof BLK!=='undefined'&&BLK[k])||null; }
 function posSrc(k){ const r=S.listings[k]; if(r&&r.p) return 'tay'; if(S.pins[safeId(k)]) return 'tay'; return hintOf(k)?'cad':null; }
 function dirOf(k){ const r=S.listings[k]; return (r&&r.dir)||(hintOf(k)&&hintOf(k).d)||''; }
 function areaOf(k){ const r=S.listings[k]; if(r&&r.area) return {v:r.area,est:false}; const h=hintOf(k); return h&&h.a?{v:h.a,est:true}:null; }
@@ -205,6 +205,7 @@ function renderMap(){
     if(!p) continue;
     const st=stateOf(r), col=COL[st]; const poly=polyOf(k);
     const opt={renderer,color:'#fff',weight:2,fillColor:col,fillOpacity:ok?.95:.25,opacity:ok?1:.4,bubblingMouseEvents:false};
+    if(baseName==='block'&&BLK[k]&&BLYR[k]&&z>=15.5){ if(z>=16.5) L.tooltip({permanent:true,direction:'center',className:'lp '+(st==='ban'?'':st)+(ok?'':' dim'),interactive:false}).setLatLng(p).setContent(r.price!=null?fmt(r.price):'?').addTo(gLab); continue; }
     const lay=(poly&&z>=16.5)?L.polygon(poly,{...opt,color:col,weight:2.5,opacity:ok?1:.4,fillOpacity:ok?.42:.15}):L.circleMarker(p,{...opt,radius:z>=18?9:z>=16?7:5});
     lay.on('click',()=>openLot(k)); gList.addLayer(lay);
     if(z>=16.5) L.tooltip({permanent:true,direction:'top',offset:[0,-8],className:'lp '+(st==='ban'?'':st)+(ok?'':' dim'),interactive:false})
@@ -884,13 +885,65 @@ function openDetail(k){
   else { $('#aCopy').onclick=()=>copyText(lotText(k)); $('#aSend').onclick=$('#dShare').onclick; }
 }
 
+
+/* ===== 2D block plan ===== */
+const BLK={}, BLYR={}, BLOAD={};
+map.createPane('blockPane').style.zIndex=240;
+const bRend=L.canvas({pane:'blockPane',padding:.3,tolerance:3});
+const gBlocks=L.layerGroup(), gBNum=L.layerGroup().addTo(map), gBGreen=L.layerGroup();
+const BST={lot:{color:'#c9bfa8',weight:.8,fillColor:'#fffcf5',fillOpacity:1},other:{color:'#cfd8c6',weight:.6,fillColor:'#e4ecdc',fillOpacity:1}};
+function blockStyle(k){
+  const r=S.listings[k];
+  if(!r) return BST.lot;
+  const st=stateOf(r), ok=matches(k), c=COL[st];
+  return {color:ok?'#0f172a':c,weight:ok?1.6:1,fillColor:c,fillOpacity:ok?.92:.3};
+}
+async function loadBlocks(pj){
+  if(BLOAD[pj.id]||!pj.blocks) return; BLOAD[pj.id]=1;
+  const d=await (await fetch(pj.blocks)).json();
+  for(const b of d.blocks){
+    const k=b.k?pj.id+':'+b.k:null;
+    const lay=L.polygon(b.p,{renderer:bRend,...(b.t==='g'?BST.other:(k?blockStyle(k):BST.lot)),interactive:!!k,bubblingMouseEvents:false});
+    if(k){ BLK[k]=b.p; BLYR[k]=lay; lay._k=k; lay.on('click',()=>openLot(k)); }
+    (b.t==='g'?gBGreen:gBlocks).addLayer(lay);
+  }
+  if(d.labels) BLK['_lab_'+pj.id]=d.labels;
+  renderMap(); blockNums();
+}
+let colored=new Set();
+function restyleBlocks(){
+  const now=new Set(Object.keys(S.listings).filter(k=>BLYR[k]));
+  for(const k of new Set([...now,...colored])) if(BLYR[k]) BLYR[k].setStyle(blockStyle(k));
+  colored=now;
+}
+function blockNums(){
+  gBNum.clearLayers(); if(baseName!=='block') return;
+  const z=map.getZoom(), b=map.getBounds();
+  if(z>=15.8&&z<18.5) for(const pj of Object.values(S.projects)){ for(const x of (BLK['_lab_'+pj.id]||[])) if(b.contains(x.p))
+    L.tooltip({permanent:true,direction:'center',className:'bk',interactive:false}).setLatLng(x.p).setContent(esc(x.t)).addTo(gBNum); }
+  if(z<18.5) return;
+  let n=0;
+  for(const k in BLYR){ if(S.listings[k]) continue; const h=hintOf(k); const p=h&&h.p; if(!p||!b.contains(p)) continue; if(++n>700) break;
+    const no=k.slice(k.lastIndexOf('_')+1).split('~')[0];
+    L.tooltip({permanent:true,direction:'center',className:'bn',interactive:false}).setLatLng(p).setContent(esc(no)).addTo(gBNum); }
+}
+map.on('moveend',blockNums);
+function applyBase(){
+  const blk=baseName==='block';
+  if(blk){ gBlocks.addTo(map); gBGreen.addTo(map); } else { map.removeLayer(gBlocks); map.removeLayer(gBGreen); }
+  map.getContainer().style.background=blk?'#dde3e9':'';
+  for(const pj of Object.values(S.projects)) if(pj.blocks&&blk) loadBlocks(pj);
+}
+const _sb=setBase; setBase=function(n){ _sb(n); applyBase(); syncPlans(); blockNums(); renderMap(); };
+const _rm2=renderMap; renderMap=function(){ _rm2(); restyleBlocks(); };
+
 /* views */
 function showView(v){
   CURV=v; document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
   document.body.classList.toggle('detail',v==='detail'); $('#actbar').classList.toggle('on',v==='detail');
   if(v!=='detail') $('#filterPanel').classList.remove('on');
-  if(v==='map') setTimeout(()=>{ map.invalidateSize(); if(S._initB&&!S._fit){ S._fit=1; if(!S.det||PREV==='home') map.fitBounds(S._initB,{padding:[20,20]}); } syncPlans(); renderMap(); },0);
+  if(v==='map') setTimeout(()=>{ map.invalidateSize(); applyBase(); if(S._initB&&!S._fit){ S._fit=1; if(!S.det||PREV==='home') map.fitBounds(S._initB,{padding:[20,20]}); } syncPlans(); renderMap(); },0);
   if(v==='home') renderList();
 }
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>showView(b.dataset.v));

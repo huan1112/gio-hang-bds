@@ -1,7 +1,7 @@
 :root{
   --bg:#f3f5f8; --card:#fff; --ink:#0f172a; --ink2:#334155; --mut:#7c8798; --line:#e7ebf0;
   --pri:#0f172a; --acc:#0f766e; --acc2:#e6f4f1; --gold:#f5b301;
-  --ok:#16a34a; --new:#f08c00; --coc:#7c5cd6; --sold:#8d9491; --bad:#dc2626;
+  --ok:#10b981; --new:#f08c00; --coc:#7c5cd6; --sold:#8d9491; --bad:#dc2626;
   --r:22px; --sh:0 6px 24px rgba(15,23,42,.08); --sh2:0 10px 30px rgba(15,23,42,.16);
   --safe-b:env(safe-area-inset-bottom);
 }
@@ -198,3 +198,7 @@ input.t:focus,textarea.t:focus,select.t:focus{border-color:var(--acc)}
 
 .leaflet-control-zoom{display:none}
 #sheet .hist{box-shadow:none;background:#f6f8fb}
+
+.bn{background:none;border:0;box-shadow:none;padding:0;color:#7a6f58;font-size:10px;font-weight:600}
+.bk{background:rgba(15,23,42,.78);border:0;color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:7px;box-shadow:none}
+.bn:before,.bk:before{display:none}

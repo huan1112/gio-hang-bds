@@ -4,7 +4,7 @@ const ADMIN=document.body.dataset.mode==="admin";
 const CFG=window.MYGIA_CONFIG||{};
 const DIRS=['Bắc','Đông Bắc','Đông','Đông Nam','Nam','Tây Nam','Tây','Tây Bắc'];
 const STATUS={ban:'Đang bán',coc:'Đã cọc',daban:'Đã bán'};
-const COL={ban:'#1f9d55',new:'#f08c00',coc:'#7c5cd6',daban:'#8d9491'};
+const COL={ban:'#10b981',new:'#f97316',coc:'#8b5cf6',daban:'#64748b'};
 const DAY=864e5;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -61,7 +61,7 @@ const tiles={
   sat:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxNativeZoom:17,maxZoom:22,attribution:'Ảnh © Esri'}),
   osm:L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxNativeZoom:19,maxZoom:22,attribution:'© OpenStreetMap'})};
 let tileFail=0; Object.values(tiles).forEach(t=>t.on('tileerror',()=>{ if(++tileFail===4) toast('Không tải được bản đồ nền ở đây — chạy bản GitHub để xem ảnh vệ tinh'); }));
-let baseName='plain';
+let baseName='block';
 function setBase(n){ baseName=n; Object.values(tiles).forEach(t=>map.removeLayer(t)); if(tiles[n]) tiles[n].addTo(map);
   document.querySelectorAll('#layerSw button').forEach(b=>b.classList.toggle('on',b.dataset.l===n));
   for(const l of Object.values(planLayers)){ l._applyOp(); l._draw&&l._map&&l._draw(); } }
@@ -165,7 +165,7 @@ function syncPlans(){ // add plan images when in view (lazy)
   for(const pj of Object.values(S.projects)){ if(!(pj.img||pj.vec)||!pj.ctrl) continue;
     let l=planLayers[pj.id];
     if(!l){ l=planLayers[pj.id]=new PlanLayer(pj); }
-    const vis=b.intersects(l.bounds())&&map.getZoom()>=13;
+    const vis=b.intersects(l.bounds())&&map.getZoom()>=13&&!(baseName==='block'&&pj.blocks);
     if(vis&&!map.hasLayer(l)) l.addTo(map); else if(!vis&&map.hasLayer(l)) map.removeLayer(l); } }
 map.on('moveend',syncPlans);
 
@@ -177,7 +177,7 @@ const pidOf=k=>k.split(':')[0];
 const codeOf=k=>{ const s=k.slice(k.indexOf(':')+1); const i=s.lastIndexOf('_'); return [s.slice(0,i),s.slice(i+1)]; };
 function hintOf(k){ const h=S.hints[pidOf(k)]; if(!h) return null; const c=k.slice(k.indexOf(':')+1); return h.lots[c]||null; }
 function posOf(k){ const r=S.listings[k]; if(r&&r.p) return r.p; const pin=S.pins[safeId(k)]; if(pin&&pin.p) return pin.p; const h=hintOf(k); return h?h.p:null; }
-function polyOf(k){ const r=S.listings[k]; if(r&&r.poly) return r.poly; const pin=S.pins[safeId(k)]; if(pin) return pin.poly||null; const h=hintOf(k); return h&&h.poly||null; }
+function polyOf(k){ const r=S.listings[k]; if(r&&r.poly) return r.poly; const pin=S.pins[safeId(k)]; if(pin) return pin.poly||null; return (typeof BLK!=='undefined'&&BLK[k])||null; }
 function posSrc(k){ const r=S.listings[k]; if(r&&r.p) return 'tay'; if(S.pins[safeId(k)]) return 'tay'; return hintOf(k)?'cad':null; }
 function dirOf(k){ const r=S.listings[k]; return (r&&r.dir)||(hintOf(k)&&hintOf(k).d)||''; }
 function areaOf(k){ const r=S.listings[k]; if(r&&r.area) return {v:r.area,est:false}; const h=hintOf(k); return h&&h.a?{v:h.a,est:true}:null; }
@@ -205,6 +205,7 @@ function renderMap(){
     if(!p) continue;
     const st=stateOf(r), col=COL[st]; const poly=polyOf(k);
     const opt={renderer,color:'#fff',weight:2,fillColor:col,fillOpacity:ok?.95:.25,opacity:ok?1:.4,bubblingMouseEvents:false};
+    if(baseName==='block'&&BLK[k]&&BLYR[k]&&z>=15.5){ if(z>=16.5) L.tooltip({permanent:true,direction:'center',className:'lp '+(st==='ban'?'':st)+(ok?'':' dim'),interactive:false}).setLatLng(p).setContent(r.price!=null?fmt(r.price):'?').addTo(gLab); continue; }
     const lay=(poly&&z>=16.5)?L.polygon(poly,{...opt,color:col,weight:2.5,opacity:ok?1:.4,fillOpacity:ok?.42:.15}):L.circleMarker(p,{...opt,radius:z>=18?9:z>=16?7:5});
     lay.on('click',()=>openLot(k)); gList.addLayer(lay);
     if(z>=16.5) L.tooltip({permanent:true,direction:'top',offset:[0,-8],className:'lp '+(st==='ban'?'':st)+(ok?'':' dim'),interactive:false})
