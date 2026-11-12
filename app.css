@@ -169,8 +169,8 @@ input.t:focus,textarea.t:focus,select.t:focus{border-color:var(--acc)}
 .anc{width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;background:#f08c00;border:3px solid #fff;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 5px #0008}
 .vtx{width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#c2410c;border:2px solid #fff}
 .zlow .lp{display:none}
-#sheet{position:absolute;left:10px;right:10px;bottom:calc(86px + var(--safe-b));z-index:700;background:#fff;border-radius:24px;box-shadow:var(--sh2);max-height:60%;overflow:auto;transform:translateY(130%);transition:transform .22s}
-#sheet.on{transform:none}
+#sheet{position:absolute;left:10px;right:10px;bottom:calc(92px + var(--safe-b));z-index:820;background:#fff;border-radius:24px;box-shadow:var(--sh2);max-height:60%;overflow:auto;transform:translateY(calc(100% + 140px));visibility:hidden;transition:transform .22s,visibility 0s .22s}
+#sheet.on{transform:none;visibility:visible;transition:transform .22s}
 #sheet .grab{width:40px;height:4px;border-radius:9px;background:#dde3ea;margin:8px auto 0}
 .sh{padding:8px 16px 14px}
 .sh h2{margin:2px 0;font-size:18px}
@@ -202,3 +202,6 @@ input.t:focus,textarea.t:focus,select.t:focus{border-color:var(--acc)}
 .bn{background:none;border:0;box-shadow:none;padding:0;color:#7a6f58;font-size:10px;font-weight:600}
 .bk{background:rgba(15,23,42,.78);border:0;color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:7px;box-shadow:none}
 .bn:before,.bk:before{display:none}
+
+.shx{position:absolute;right:10px;top:10px;width:36px;height:36px;border-radius:50%;background:#f1f4f8;font-size:15px;font-weight:700;color:var(--ink2);z-index:2}
+#sheet{touch-action:pan-y}

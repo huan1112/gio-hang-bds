@@ -155,7 +155,7 @@ function openDetail(k){
 /* ===== 2D block plan ===== */
 const BLK={}, BLYR={}, BLOAD={};
 map.createPane('blockPane').style.zIndex=240;
-const bRend=L.canvas({pane:'blockPane',padding:.3,tolerance:3});
+const bRend=L.canvas({pane:'blockPane',padding:.3,tolerance:3}); window.BREND=bRend;
 const gBlocks=L.layerGroup(), gBNum=L.layerGroup().addTo(map), gBGreen=L.layerGroup();
 const BST={lot:{color:'#c9bfa8',weight:.8,fillColor:'#fffcf5',fillOpacity:1},other:{color:'#cfd8c6',weight:.6,fillColor:'#e4ecdc',fillOpacity:1}};
 function blockStyle(k){

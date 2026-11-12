@@ -171,6 +171,8 @@ map.on('moveend',syncPlans);
 
 const gList=L.layerGroup().addTo(map), gLab=L.layerGroup().addTo(map), gSel=L.layerGroup().addTo(map), gMode=L.layerGroup().addTo(map), gPj=L.layerGroup().addTo(map);
 const renderer=L.canvas({padding:.3,tolerance:6});
+/* non-interactive outlines in SVG so they never cover the interactive canvas and swallow taps */
+const svgR=L.svg({padding:.3});
 
 /* ============ Listing geometry ============ */
 const pidOf=k=>k.split(':')[0];
@@ -199,12 +201,14 @@ function matches(k){ const r=S.listings[k], f=S.f; if(!r) return false;
   if(f.recent&&!isRecent(r)) return false; return true; }
 function renderMap(){
   gList.clearLayers(); gLab.clearLayers(); gPj.clearLayers();
+  const blockMode=baseName==='block'&&window.BREND; const rnd=blockMode?window.BREND:renderer;
+  if(blockMode&&map.hasLayer(renderer)) map.removeLayer(renderer);
   const z=map.getZoom(); let n=0; const per={};
   for(const k in S.listings){ const r=S.listings[k]; const p=posOf(k); const ok=matches(k);
     if(ok){ n++; per[pidOf(k)]=(per[pidOf(k)]||0)+1; }
     if(!p) continue;
     const st=stateOf(r), col=COL[st]; const poly=polyOf(k);
-    const opt={renderer,color:'#fff',weight:2,fillColor:col,fillOpacity:ok?.95:.25,opacity:ok?1:.4,bubblingMouseEvents:false};
+    const opt={renderer:rnd,color:'#fff',weight:2,fillColor:col,fillOpacity:ok?.95:.25,opacity:ok?1:.4,bubblingMouseEvents:false};
     if(baseName==='block'&&BLK[k]&&BLYR[k]&&z>=15.5){ if(z>=16.5) L.tooltip({permanent:true,direction:'center',className:'lp '+(st==='ban'?'':st)+(ok?'':' dim'),interactive:false}).setLatLng(p).setContent(r.price!=null?fmt(r.price):'?').addTo(gLab); continue; }
     const lay=(poly&&z>=16.5)?L.polygon(poly,{...opt,color:col,weight:2.5,opacity:ok?1:.4,fillOpacity:ok?.42:.15}):L.circleMarker(p,{...opt,radius:z>=18?9:z>=16?7:5});
     lay.on('click',()=>openLot(k)); gList.addLayer(lay);
@@ -353,7 +357,7 @@ function onMapClickMode(e){
   if(PIN){ if(PIN.kind==='point'){ PIN.done([e.latlng.lat,e.latlng.lng],null); endModes(); }
     else { PIN.pts.push([e.latlng.lat,e.latlng.lng]); pinDraw(); } return true; }
   return false; }
-map.on('click',onMapClickMode);
+map.on('click',e=>{ if(!onMapClickMode(e)) closeSheet(); });
 function startPin(k,kind){
   endModes(); closeSheet(); showView('map');
   const p=posOf(k); if(p) map.flyTo(p,Math.max(map.getZoom(),19),{duration:.5});
@@ -367,7 +371,7 @@ function startPin(k,kind){
   if(kind==='poly'){ $('#pnUndo').onclick=()=>{ PIN.pts.pop(); pinDraw(); };
     $('#pnDone').onclick=()=>{ if(PIN.pts.length<3) return toast('Cần ít nhất 3 góc'); const pts=PIN.pts; const c=[pts.reduce((s,p)=>s+p[0],0)/pts.length,pts.reduce((s,p)=>s+p[1],0)/pts.length]; const d=PIN.done; endModes(); d(c,pts); }; }
 }
-function pinDraw(){ gMode.clearLayers(); if(!PIN) return; if(PIN.pts.length>1) L.polygon(PIN.pts,{color:'#c2410c',weight:2,fillOpacity:.15,interactive:false}).addTo(gMode);
+function pinDraw(){ gMode.clearLayers(); if(!PIN) return; if(PIN.pts.length>1) L.polygon(PIN.pts,{renderer:svgR,color:'#c2410c',weight:2,fillOpacity:.15,interactive:false}).addTo(gMode);
   PIN.pts.forEach(p=>L.marker(p,{interactive:false,icon:L.divIcon({className:'',html:'<div class="vtx"></div>',iconSize:[0,0]})}).addTo(gMode)); }
 function polyArea(poly){ if(!poly||poly.length<3) return null; const P=poly.map(p=>{ const q=proj(p); return [q.x,q.y]; }); let a=0;
   for(let i=0;i<P.length;i++){ const p=P[i],q=P[(i+1)%P.length]; a+=p[0]*q[1]-q[0]*p[1]; } const k=Math.cos(poly[0][0]*Math.PI/180); return Math.abs(a)/2*k*k; }
@@ -377,10 +381,10 @@ function openLot(k){
   if(ALIGN||PIN) return;
   S.sel=k; const r=S.listings[k]; const pj=S.projects[pidOf(k)]||{name:'?'}; gSel.clearLayers();
   const p=posOf(k), poly=polyOf(k);
-  if(poly) L.polygon(poly,{weight:3,color:'#c2410c',fill:false,interactive:false}).addTo(gSel);
-  else if(p) L.circleMarker(p,{radius:14,color:'#c2410c',weight:3,fill:false,interactive:false}).addTo(gSel);
+  if(poly) L.polygon(poly,{renderer:svgR,weight:3,color:'#c2410c',fill:false,interactive:false}).addTo(gSel);
+  else if(p) L.circleMarker(p,{renderer:svgR,radius:14,color:'#c2410c',weight:3,fill:false,interactive:false}).addTo(gSel);
   const st=r?(r.status||'ban'):'none'; const ar=areaOf(k), h=hintOf(k);
-  let x=`<div class="meta" style="margin:0">${esc(pj.name)}</div><div style="display:flex;align-items:center;gap:8px"><h2>${esc(titleOf(k))}</h2><span class="st ${st}" style="margin-left:auto">${r?STATUS[st]:'Chưa có'}</span></div>`;
+  let x=`<button class="shx" id="sX" aria-label="Đóng">✕</button><div class="meta" style="margin:0">${esc(pj.name)}</div><div style="display:flex;align-items:center;gap:8px"><h2>${esc(titleOf(k))}</h2><span class="st ${st}" style="margin-left:auto">${r?STATUS[st]:'Chưa có'}</span></div>`;
   if(r){ x+=`<div class="price">${fmtTy(r.price)}${r.price!=null&&ar?` <span style="font-size:14px;color:var(--mut);font-weight:500">≈ ${fmt(r.price*1000/ar.v,1)} tr/m²</span>`:''}</div>`;
     if(r.flag&&ADMIN) x+=`<div class="warn">⚠️ ${esc(r.flag)}</div>`; }
   x+=`<div class="kv">`;
@@ -402,7 +406,7 @@ function openLot(k){
   if(p) x+=`<a class="btn sm" target="_blank" rel="noopener" href="${gmaps(p)}">Google Maps</a>`;
   x+=`<button class="btn sm" id="sClose" style="margin-left:auto">Đóng</button></div>`;
   $('#sheetBody').innerHTML=x; $('#sheet').classList.add('on');
-  $('#sClose').onclick=closeSheet;
+  $('#sClose').onclick=closeSheet; $('#sX').onclick=closeSheet;
   if($('#sCopy')) $('#sCopy').onclick=()=>copyText(lotText(k));
   if($('#sDet')) $('#sDet').onclick=()=>openDetail(k);
   if($('#sEdit')) $('#sEdit').onclick=()=>openEdit(k);
